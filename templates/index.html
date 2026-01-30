@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Email Spam Detector</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: 0.4s;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .dark {
+            background: #121212;
+            color: white;
+        }
+
+        .container {
+            background: white;
+            width: 420px;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .dark .container {
+            background: #1e1e1e;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            margin-top: 12px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        button:hover { transform: scale(1.05); }
+
+        .result { font-size: 18px; font-weight: bold; margin-top: 15px; }
+        .spam { color: red; }
+        .ham { color: green; }
+
+        .toggle {
+            margin-bottom: 10px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .prob { margin-top: 5px; font-size: 14px; }
+    </style>
+</head>
+<body id="body">
+
+<div class="container">
+    <div class="toggle" onclick="toggleMode()">🌙 Toggle Dark Mode</div>
+
+    <h2>📧 Email Spam Detector</h2>
+
+    <form action="/predict" method="post">
+        <textarea name="email" placeholder="Type email content..."></textarea>
+        <br>
+        <button type="submit">Check Email</button>
+    </form>
+
+    {% if prediction %}
+        <div class="result {% if 'Spam' in prediction %}spam{% else %}ham{% endif %}">
+            {{ prediction }}
+        </div>
+        <div class="prob">
+            Spam Probability: {{ probability }}%
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function toggleMode() {
+    document.getElementById("body").classList.toggle("dark");
+}
+</script>
+
+</body>
+</html>
