@@ -1,17 +1,17 @@
 from flask import Flask, render_template, request, redirect, url_for
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
 import pickle
 import sqlite3
 from datetime import datetime
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user
 
 app = Flask(__name__)
-app.secret_key = "secretkey123"
+app.secret_key = "supersecretkey"
 
-# ================= ML FILES LOAD =================
+# ================= ML LOAD =================
 model = pickle.load(open("model.pkl", "rb"))
 vectorizer = pickle.load(open("vectorizer.pkl", "rb"))
 
-# ================= DATABASE SETUP =================
+# ================= DATABASE =================
 def init_db():
     conn = sqlite3.connect("history.db")
     c = conn.cursor()
@@ -22,7 +22,7 @@ def init_db():
 
 init_db()
 
-# ================= LOGIN SETUP =================
+# ================= LOGIN SYSTEM =================
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
@@ -35,34 +35,36 @@ class User(UserMixin):
 def load_user(user_id):
     return User(user_id)
 
-# ================= LOGIN ROUTE =================
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/login', methods=['GET','POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-
-        if username == "admin" and password == "1234":
-            user = User(1)
-            login_user(user)
-            return redirect(url_for('home'))
-
+        if request.form['username'] == "admin" and request.form['password'] == "1234":
+            login_user(User(1))
+            return redirect('/')
     return render_template("login.html")
 
-# ================= LOGOUT =================
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for('login'))
+    return redirect('/login')
 
-# ================= HOME PAGE =================
+# ================= HOME =================
 @app.route('/')
 @login_required
 def home():
-    return render_template("index.html")
+    conn = sqlite3.connect("history.db")
+    c = conn.cursor()
+    c.execute("SELECT COUNT(*) FROM emails WHERE prediction LIKE 'Spam%'")
+    spam_count = c.fetchone()[0]
 
-# ================= PREDICTION =================
+    c.execute("SELECT COUNT(*) FROM emails WHERE prediction LIKE 'Not Spam%'")
+    ham_count = c.fetchone()[0]
+    conn.close()
+
+    return render_template("index.html", spam_count=spam_count, ham_count=ham_count)
+
+# ================= TEXT PREDICTION =================
 @app.route('/predict', methods=['POST'])
 @login_required
 def predict():
@@ -71,10 +73,8 @@ def predict():
 
     result = model.predict(data)[0]
     prob = model.predict_proba(data)[0][1] * 100
-
     prediction = "Spam 🚫" if result == 1 else "Not Spam ✅"
 
-    # Save history
     conn = sqlite3.connect("history.db")
     c = conn.cursor()
     c.execute("INSERT INTO emails VALUES (?,?,?,?)",
@@ -84,9 +84,29 @@ def predict():
 
     return render_template("index.html",
                            prediction=prediction,
-                           probability=round(prob, 2))
+                           probability=round(prob,2),
+                           spam_count=0,
+                           ham_count=0)
 
-# ================= HISTORY PAGE =================
+# ================= FILE UPLOAD =================
+@app.route('/upload_file', methods=['POST'])
+@login_required
+def upload_file():
+    file = request.files['file']
+    content = file.read().decode("utf-8")
+
+    data = vectorizer.transform([content])
+    result = model.predict(data)[0]
+    prob = model.predict_proba(data)[0][1] * 100
+    prediction = "Spam 🚫" if result == 1 else "Not Spam ✅"
+
+    return render_template("index.html",
+                           prediction=prediction,
+                           probability=round(prob,2),
+                           spam_count=0,
+                           ham_count=0)
+
+# ================= HISTORY =================
 @app.route('/history')
 @login_required
 def history():
@@ -97,6 +117,16 @@ def history():
     conn.close()
     return render_template("history.html", data=data)
 
-# ================= RUN APP =================
+# ================= DELETE HISTORY =================
+@app.route('/delete_history', methods=['POST'])
+@login_required
+def delete_history():
+    conn = sqlite3.connect("history.db")
+    c = conn.cursor()
+    c.execute("DELETE FROM emails")
+    conn.commit()
+    conn.close()
+    return redirect(url_for('home'))
+
 if __name__ == "__main__":
     app.run(debug=True)

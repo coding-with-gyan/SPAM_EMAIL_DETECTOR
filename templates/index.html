@@ -1,99 +1,177 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Email Spam Detector</title>
+    <title>AI Spam Detection System</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',sans-serif; }
+
         body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: 0.4s;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg,#0f172a,#1e293b);
+            color:white;
         }
 
-        .dark {
-            background: #121212;
-            color: white;
+        /* ===== NAVBAR ===== */
+        .navbar {
+            background:#0ea5e9;
+            padding:15px 30px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            box-shadow:0 2px 10px rgba(0,0,0,0.4);
+        }
+        .navbar h2 { font-size:20px; letter-spacing:1px; }
+        .navbar a {
+            color:white;
+            text-decoration:none;
+            margin-left:15px;
+            font-weight:bold;
         }
 
+        /* ===== LAYOUT ===== */
         .container {
-            background: white;
-            width: 420px;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            text-align: center;
+            width:90%;
+            margin:30px auto;
+            display:grid;
+            grid-template-columns: 2fr 1fr;
+            gap:20px;
         }
 
-        .dark .container {
-            background: #1e1e1e;
+        .card {
+            background:#1e293b;
+            padding:20px;
+            border-radius:12px;
+            box-shadow:0 0 15px rgba(0,0,0,0.4);
+            animation:fadeIn 0.6s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity:0; transform:translateY(10px); }
+            to { opacity:1; transform:translateY(0); }
         }
 
         textarea {
-            width: 100%;
-            height: 120px;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
+            width:100%;
+            height:130px;
+            border:none;
+            border-radius:8px;
+            padding:10px;
+            font-size:14px;
         }
 
         button {
-            margin-top: 12px;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            background: #667eea;
-            color: white;
-            cursor: pointer;
-            font-size: 15px;
+            margin-top:10px;
+            padding:10px 18px;
+            border:none;
+            border-radius:8px;
+            background:#38bdf8;
+            font-weight:bold;
+            cursor:pointer;
+            transition:0.3s;
+        }
+        button:hover { background:#0ea5e9; }
+
+        .result-box {
+            margin-top:15px;
+            padding:15px;
+            border-radius:10px;
+            font-size:18px;
+            font-weight:bold;
+            text-align:center;
+        }
+        .spam { background:#7f1d1d; color:#fecaca; }
+        .ham { background:#064e3b; color:#bbf7d0; }
+
+        .chart-container { width:100%; }
+
+        .upload-box input { margin-top:10px; }
+
+        .delete-btn {
+            background:#ef4444;
         }
 
-        button:hover { transform: scale(1.05); }
-
-        .result { font-size: 18px; font-weight: bold; margin-top: 15px; }
-        .spam { color: red; }
-        .ham { color: green; }
-
-        .toggle {
-            margin-bottom: 10px;
-            cursor: pointer;
-            font-size: 14px;
+        footer {
+            text-align:center;
+            margin-top:20px;
+            padding:15px;
+            color:#94a3b8;
+            font-size:14px;
         }
-
-        .prob { margin-top: 5px; font-size: 14px; }
     </style>
 </head>
-<body id="body">
+<body>
 
-<div class="container">
-    <div class="toggle" onclick="toggleMode()">🌙 Toggle Dark Mode</div>
-
-    <h2>📧 Email Spam Detector</h2>
-
-    <form action="/predict" method="post">
-        <textarea name="email" placeholder="Type email content..."></textarea>
-        <br>
-        <button type="submit">Check Email</button>
-    </form>
-
-    {% if prediction %}
-        <div class="result {% if 'Spam' in prediction %}spam{% else %}ham{% endif %}">
-            {{ prediction }}
-        </div>
-        <div class="prob">
-            Spam Probability: {{ probability }}%
-        </div>
-    {% endif %}
+<!-- ===== NAVBAR ===== -->
+<div class="navbar">
+    <h2>📧 AI Spam Detection Dashboard</h2>
+    <div>
+        <a href="/history">History</a>
+        <a href="/logout">Logout</a>
+    </div>
 </div>
 
+<div class="container">
+
+    <!-- LEFT SIDE -->
+    <div>
+        <!-- Email Input -->
+        <div class="card">
+            <h3>✉ Analyze Email Text</h3>
+            <form action="/predict" method="POST">
+                <textarea name="email" placeholder="Paste email content..." required></textarea>
+                <button type="submit">Scan Email</button>
+            </form>
+
+            {% if prediction %}
+            <div class="result-box {% if 'Spam' in prediction %}spam{% else %}ham{% endif %}">
+                {{ prediction }} <br>
+                Confidence: {{ probability }}%
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- File Upload -->
+        <div class="card upload-box">
+            <h3>📂 Upload Email File (.txt)</h3>
+            <form action="/upload_file" method="POST" enctype="multipart/form-data">
+                <input type="file" name="file" required>
+                <button>Scan File</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- RIGHT SIDE -->
+    <div class="card">
+        <h3>📊 Spam Statistics</h3>
+        <div class="chart-container">
+            <canvas id="spamChart"></canvas>
+        </div>
+
+        <form action="/delete_history" method="POST" onsubmit="return confirm('Delete all history?')">
+            <button class="delete-btn">🗑 Delete History</button>
+        </form>
+    </div>
+
+</div>
+
+<footer>AI Spam Detection System • Built with Flask & Machine Learning</footer>
+
 <script>
-function toggleMode() {
-    document.getElementById("body").classList.toggle("dark");
-}
+    var ctx = document.getElementById('spamChart').getContext('2d');
+
+    var spamCount = {{ spam_count|default(0) }};
+    var hamCount = {{ ham_count|default(0) }};
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Spam', 'Safe'],
+            datasets: [{
+                data: [spamCount, hamCount],
+                borderWidth: 1
+            }]
+        }
+    });
 </script>
 
 </body>

@@ -1,71 +1,55 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Login - Spam Detector</title>
+    <title>Login</title>
     <style>
         body {
-            background: linear-gradient(135deg, #1e1e2f, #2b5876);
+            background: linear-gradient(135deg, #0f172a, #1e293b);
             font-family: Arial, sans-serif;
+            color: white;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            margin: 0;
         }
-
-        .login-box {
-            background: white;
-            padding: 40px;
+        .box {
+            background: #1e293b;
+            padding: 30px;
             border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            text-align: center;
             width: 300px;
+            text-align: center;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
         }
-
-        h2 {
-            margin-bottom: 20px;
-        }
-
         input {
-            width: 100%;
+            width: 90%;
             padding: 10px;
             margin: 10px 0;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-        }
-
-        button {
-            width: 100%;
-            padding: 10px;
-            background: #2b5876;
-            color: white;
+            border-radius: 6px;
             border: none;
-            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            background: #38bdf8;
+            border: none;
+            border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
         }
-
         button:hover {
-            background: #1e3c72;
-        }
-
-        .note {
-            margin-top: 15px;
-            font-size: 12px;
-            color: gray;
+            background: #0ea5e9;
         }
     </style>
 </head>
 <body>
 
-<div class="login-box">
-    <h2>🔐 Spam Detector Login</h2>
+<div class="box">
+    <h2>🔐 Login</h2>
     <form method="POST">
-        <input type="text" name="username" placeholder="Username" required>
-        <input type="password" name="password" placeholder="Password" required>
+        <input type="text" name="username" placeholder="Username" required><br>
+        <input type="password" name="password" placeholder="Password" required><br>
         <button type="submit">Login</button>
     </form>
-    <div class="note">Use admin / 1234</div>
+    <p style="font-size:12px;margin-top:10px;">Use: admin / 1234</p>
 </div>
 
 </body>

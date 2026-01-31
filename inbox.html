@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Spam Detector Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg,#0f172a,#1e293b);
+            color: white;
+        }
+
+        header {
+            background: #0ea5e9;
+            padding: 15px;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .container {
+            width: 90%;
+            margin: auto;
+            margin-top: 20px;
+        }
+
+        .card {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.4);
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            border-radius: 8px;
+            border: none;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 10px 18px;
+            border-radius: 8px;
+            border: none;
+            background: #38bdf8;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover { background: #0ea5e9; }
+
+        .result-box {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .spam { background: #7f1d1d; color: #fecaca; }
+        .ham { background: #064e3b; color: #bbf7d0; }
+
+        .actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        a {
+            color: #38bdf8;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .chart-container {
+            width: 300px;
+            margin: auto;
+        }
+    </style>
+</head>
+<body>
+
+<header>📧 AI Spam Detection Dashboard</header>
+
+<div class="container">
+
+    <!-- Email Prediction Card -->
+    <div class="card">
+        <h3>✉ Check Email Text</h3>
+        <form action="/predict" method="POST">
+            <textarea name="email" placeholder="Paste email content here..." required></textarea>
+            <button type="submit">Analyze</button>
+        </form>
+
+        {% if prediction %}
+        <div class="result-box {% if 'Spam' in prediction %}spam{% else %}ham{% endif %}">
+            {{ prediction }} <br>
+            Confidence: {{ probability }}%
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Upload File -->
+    <div class="card">
+        <h3>📂 Upload Email File (.txt)</h3>
+        <form action="/upload_file" method="POST" enctype="multipart/form-data">
+            <input type="file" name="file" required>
+            <button type="submit">Scan File</button>
+        </form>
+    </div>
+
+    <!-- Chart -->
+    <div class="card">
+        <h3>📊 Spam vs Safe Emails</h3>
+        <div class="chart-container">
+            <canvas id="spamChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="card actions">
+        <a href="/history">📜 View History</a>
+
+        <form action="/delete_history" method="POST" onsubmit="return confirm('Delete all history?')">
+            <button type="submit" style="background:#ef4444;">🗑 Delete History</button>
+        </form>
+
+        <a href="/logout">🚪 Logout</a>
+    </div>
+
+</div>
+
+<script>
+    var ctx = document.getElementById('spamChart').getContext('2d');
+
+    var spamCount = {{ spam_count|default(0) }};
+    var hamCount = {{ ham_count|default(0) }};
+
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Spam', 'Safe'],
+            datasets: [{
+                data: [spamCount, hamCount],
+                borderWidth: 1
+            }]
+        }
+    });
+</script>
+
+</body>
+</html>

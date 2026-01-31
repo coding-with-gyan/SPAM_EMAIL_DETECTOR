@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body style="background:#111;color:white;text-align:center">
+
+<h2>Spam Dashboard</h2>
+<canvas id="chart"></canvas>
+
+<form action="/delete_history" method="post">
+<button>Delete History</button>
+</form>
+
+<script>
+const spam = {{ spam_count|tojson }};
+const ham = {{ ham_count|tojson }};
+
+new Chart(document.getElementById('chart'), {
+    type: 'pie',
+    data: {
+        labels: ['Spam', 'Not Spam'],
+        datasets: [{ data: [spam, ham] }]
+    }
+});
+</script>
+
+<a href="/">Back</a>
+</body>
+</html>
